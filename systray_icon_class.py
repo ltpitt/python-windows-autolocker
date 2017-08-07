@@ -150,6 +150,7 @@ class SysTrayIcon(object):
     def create_menu(self, menu, menu_options):
         for option_text, option_icon, option_action, option_id in menu_options[::-1]:
             if option_icon:
+                print str(option_icon)
                 option_icon = self.prep_menu_icon(option_icon)
 
             if option_id in self.menu_actions_by_id:
