@@ -79,6 +79,9 @@ class ScreenLock(object):
             print "Could not find target bluetooth device nearby"
             return False
 
+    def find_paired_bluetooth_devices(self):
+        nearby_devices = bluetooth.discover_devices()
+
     def is_user_presence_timeout_reached(self):
         """
         Checks if a user has been absent for more than user_presence_timeout
