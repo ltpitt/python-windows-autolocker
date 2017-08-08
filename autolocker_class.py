@@ -61,26 +61,32 @@ class ScreenLock(object):
         True or False
         """
         target_name = self.user_phone_bluetooth_name
-        target_address = None
-        nearby_devices = bluetooth.discover_devices()
-        for bdaddr in nearby_devices:
-            if target_name == bluetooth.lookup_name( bdaddr ):
-                target_address = bdaddr
-                break
-        if target_address is not None:
-            services = bluetooth.find_service(address=target_address)
-            if len(services) > 0:
-                print "Found target bluetooth device with address ", target_address
-                return True
-            else:
-                print "Could not find target bluetooth device nearby"
-                return False
+        nearby_devices = self.find_paired_bluetooth_devices()
+        for nearby_device in nearby_devices:
+            if nearby_device == target_name:
+                services = bluetooth.find_service(address=nearby_devices[nearby_device])
+                if len(services) > 0:
+                    print "Found target bluetooth device"
+                    print "Name: " + nearby_device
+                    print "Address: " + nearby_devices[nearby_device]
+                    return True
         else:
             print "Could not find target bluetooth device nearby"
             return False
 
+
     def find_paired_bluetooth_devices(self):
+        """
+        Finds paired bluetooth devices
+
+        Returns:
+        {bluetooth_device_name : bluetooth_device_address}
+        """
+        nearby_devices_dictionary = {}
         nearby_devices = bluetooth.discover_devices()
+        for nearby_device in nearby_devices:
+            nearby_devices_dictionary[bluetooth.lookup_name(nearby_device)] = nearby_device
+        return nearby_devices_dictionary
 
     def is_user_presence_timeout_reached(self):
         """
@@ -100,3 +106,8 @@ class ScreenLock(object):
         Resets seconds_user_missing_counter to 0
         """
         self.seconds_user_missing_counter = 0
+
+
+
+locker = ScreenLock('G4', 60)
+print locker.is_user_phone_nearby()
