@@ -18,35 +18,53 @@ class ScreenLock(object):
         self.config_file_name = "autolocker.ini"
         self.script_path = os.path.abspath(os.path.dirname(__file__))
         self.config_file_path = os.path.join(self.script_path, self.config_file_name)
-        try:
-            self.read_config_file()
-        except IOError:
-            self.create_config_file()
         self.mouse_coordinates = mouse_coordinates
         self.seconds_user_missing_counter = seconds_user_missing_counter
         self.is_autolocker_enabled = False
-
+        self.read_config_file()
 
     def read_config_file(self):
-        with open(self.config_file_path):
-            print "Loading Autolocker configuration"
-            parser = SafeConfigParser()
-            parser.read(self.config_file_path)
-            self.user_presence_timeout = parser.get('autolocker', 'user_presence_timeout')
-            self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
-            self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+        """
+        Checks if a user is moving his mouse or typing on his keyboard
 
-    def create_config_file(self):
+        Returns:
+        {user_presence_timeout : value, is_bluetooth_enabled : value, user_phone_bluetooth_name : value}
+        """
+        try:
+            with open(self.config_file_path):
+                print "Loading Autolocker configuration"
+                parser = SafeConfigParser()
+                parser.read(self.config_file_path)
+                self.user_presence_timeout = parser.get('autolocker', 'user_presence_timeout')
+                self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
+                self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+                print "user_presence_timeout: " + self.user_presence_timeout
+                print "is_bluetooth_enabled: " + self.is_bluetooth_enabled
+                print "user_phone_bluetooth_name: " + self.user_phone_bluetooth_name
+        except IOError:
+                self.write_config_file()
+                self.read_config_file()
+
+    def write_config_file(self, user_presence_timeout, is_bluetooth_enabled, user_phone_bluetooth_name):
         if not os.path.isfile(self.config_file_path):
             print "Creating Autolocker configuration file with default values"
-            f = open(self.config_file_path, 'w')
-            f.write('[autolocker]\nuser_presence_timeout = 30\n')
-            f.write('is_bluetooth_enabled = True\n')
-            f.write('user_phone_bluetooth_name = None\n')
-            parser.read(self.config_file_path)
-            self.user_presence_timeout = parser.get('autolocker', 'user_presence_timeout')
-            self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
-            self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+            user_presence_timeout_value = '30'
+            is_bluetooth_enabled_value = 'True'
+            user_phone_bluetooth_name = 'None'
+        else:
+            print "Updating Autolocker configuration file with values provided by user"
+            user_presence_timeout_value = user_presence_timeout
+            is_bluetooth_enabled_value = is_bluetooth_enabled
+            user_phone_bluetooth_name = user_phone_bluetooth_name
+            
+        f = open(self.config_file_path, 'w')
+        parser = SafeConfigParser()
+        parser.add_section('autolocker')
+        parser.set('autolocker', 'user_presence_timeout', user_presence_timeout_value)
+        parser.set('autolocker', 'is_bluetooth_enabled', is_bluetooth_enabled_value)
+        parser.set('autolocker', 'user_phone_bluetooth_name', user_phone_bluetooth_name)
+        parser.write(f)
+        f.close()
 
     def is_user_present(self):
         """
@@ -103,7 +121,6 @@ class ScreenLock(object):
             print "Could not find target bluetooth device nearby"
             return False
 
-
     def find_paired_bluetooth_devices(self):
         """
         Finds paired bluetooth devices
@@ -135,3 +152,5 @@ class ScreenLock(object):
         Resets seconds_user_missing_counter to 0
         """
         self.seconds_user_missing_counter = 0
+
+lock = ScreenLock()
