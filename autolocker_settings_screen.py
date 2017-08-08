@@ -52,6 +52,7 @@ class AutolockSettingsDialog(wx.Dialog):
             self.bluetooth_refresh_button.Enable()
             self.bluetooth_text.Enable()
             self.bluetooth_device_combobox.Enable()
+            self.Lo
         else:
             self.bluetooth_refresh_button.Disable()
             self.bluetooth_text.Disable()

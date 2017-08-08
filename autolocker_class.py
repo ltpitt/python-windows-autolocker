@@ -3,22 +3,43 @@ import time
 import ctypes
 import msvcrt
 import bluetooth
+import os
+from ConfigParser import SafeConfigParser
 
 class ScreenLock(object):
     """
     A simple object that checks if a user is in front of the computer
     If not his Windows Operating System will be locked
     """
-    def __init__(self, user_phone_bluetooth_name, user_presence_timeout, mouse_coordinates=[0,0], seconds_user_missing_counter=0):
+    def __init__(self, mouse_coordinates=[0,0], seconds_user_missing_counter=0):
         """
-        Initializing member variables
+        Initializing member variables and loading / creating config file
         """
-        self.user_phone_bluetooth_name = user_phone_bluetooth_name
+        self.config_file_name = "autolocker.ini"
+        self.script_path = os.path.abspath(os.path.dirname(__file__))
+        self.config_file_path = os.path.join(self.script_path, self.config_file_name)
+        try:
+            with open(self.config_file_path):
+                print "Loading Autolocker configuration"
+                parser = SafeConfigParser()
+                parser.read(self.config_file_path)
+                self.user_presence_timeout =  parser.get('autolocker', 'user_presence_timeout')
+                self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
+                self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+        except IOError:
+            if not os.path.isfile(self.config_file_path):
+                print "Creating Autolocker configuration file with default values"
+                f = open(self.config_file_path, 'w')
+                f.write('[autolocker]\nuser_presence_timeout = 30\n')
+                f.write('is_bluetooth_enabled = True\n')
+                f.write('user_phone_bluetooth_name = None\n')
+                parser.read(self.config_file_path)
+                self.user_presence_timeout =  parser.get('autolocker', 'user_presence_timeout')
+                self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
+                self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
         self.mouse_coordinates = mouse_coordinates
         self.seconds_user_missing_counter = seconds_user_missing_counter
-        self.user_presence_timeout = user_presence_timeout
         self.is_autolocker_enabled = False
-        self.is_bluetooth_enabld = False
 
 
     def is_user_present(self):
@@ -109,5 +130,5 @@ class ScreenLock(object):
 
 
 
-locker = ScreenLock('G4', 60)
+locker = ScreenLock()
 print locker.is_user_phone_nearby()
