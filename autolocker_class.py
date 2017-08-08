@@ -19,28 +19,34 @@ class ScreenLock(object):
         self.script_path = os.path.abspath(os.path.dirname(__file__))
         self.config_file_path = os.path.join(self.script_path, self.config_file_name)
         try:
-            with open(self.config_file_path):
-                print "Loading Autolocker configuration"
-                parser = SafeConfigParser()
-                parser.read(self.config_file_path)
-                self.user_presence_timeout =  parser.get('autolocker', 'user_presence_timeout')
-                self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
-                self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+            self.read_config_file()
         except IOError:
-            if not os.path.isfile(self.config_file_path):
-                print "Creating Autolocker configuration file with default values"
-                f = open(self.config_file_path, 'w')
-                f.write('[autolocker]\nuser_presence_timeout = 30\n')
-                f.write('is_bluetooth_enabled = True\n')
-                f.write('user_phone_bluetooth_name = None\n')
-                parser.read(self.config_file_path)
-                self.user_presence_timeout =  parser.get('autolocker', 'user_presence_timeout')
-                self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
-                self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+            self.create_config_file()
         self.mouse_coordinates = mouse_coordinates
         self.seconds_user_missing_counter = seconds_user_missing_counter
         self.is_autolocker_enabled = False
 
+
+    def read_config_file(self):
+        with open(self.config_file_path):
+            print "Loading Autolocker configuration"
+            parser = SafeConfigParser()
+            parser.read(self.config_file_path)
+            self.user_presence_timeout = parser.get('autolocker', 'user_presence_timeout')
+            self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
+            self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
+
+    def create_config_file(self):
+        if not os.path.isfile(self.config_file_path):
+            print "Creating Autolocker configuration file with default values"
+            f = open(self.config_file_path, 'w')
+            f.write('[autolocker]\nuser_presence_timeout = 30\n')
+            f.write('is_bluetooth_enabled = True\n')
+            f.write('user_phone_bluetooth_name = None\n')
+            parser.read(self.config_file_path)
+            self.user_presence_timeout = parser.get('autolocker', 'user_presence_timeout')
+            self.is_bluetooth_enabled = parser.get('autolocker', 'is_bluetooth_enabled')
+            self.user_phone_bluetooth_name = parser.get('autolocker', 'user_phone_bluetooth_name')
 
     def is_user_present(self):
         """
@@ -59,7 +65,9 @@ class ScreenLock(object):
           if (self.mouse_coordinates != new_mouse_coordinates):
               self.mouse_coordinates = new_mouse_coordinates
               is_user_present = True
-          # --- NOTE --- Keyboard check implementation is not working well
+          # --- NOTE ---
+          # Keyboard activity check implementation is not working well (just works if Python has focus)
+          # Needs to be checked / fixed, currently disabled
           #else:
               # Seems like there is no mouse activity, let's
               # check for keyboard, then...
@@ -127,8 +135,3 @@ class ScreenLock(object):
         Resets seconds_user_missing_counter to 0
         """
         self.seconds_user_missing_counter = 0
-
-
-
-locker = ScreenLock()
-print locker.is_user_phone_nearby()
